@@ -1,8 +1,7 @@
 /*
-	heap
-	This question requires you to implement a binary heap function
+    heap
+    This question requires you to implement a binary heap function
 */
-
 
 use std::cmp::Ord;
 use std::default::Default;
@@ -38,6 +37,18 @@ where
 
     pub fn add(&mut self, value: T) {
         //TODO
+        self.items.push(value);
+        self.count += 1;
+        let mut current_idx = self.items.len() - 1;
+        while current_idx > 1 {
+            let parent_idx = self.parent_idx(current_idx);
+            if (self.comparator)(&self.items[current_idx], &self.items[parent_idx]) {
+                self.items.swap(current_idx, parent_idx);
+                current_idx = parent_idx;
+            } else {
+                break;
+            }
+        }
     }
 
     fn parent_idx(&self, idx: usize) -> usize {
@@ -58,7 +69,15 @@ where
 
     fn smallest_child_idx(&self, idx: usize) -> usize {
         //TODO
-		0
+        let left = self.left_child_idx(idx);
+        let right = self.right_child_idx(idx);
+        if right > self.count {
+            left
+        } else if (self.comparator)(&self.items[left], &self.items[right]) {
+            left
+        } else {
+            right
+        }
     }
 }
 
@@ -79,13 +98,54 @@ where
 
 impl<T> Iterator for Heap<T>
 where
-    T: Default,
+    T: Default + std::fmt::Display,
 {
     type Item = T;
 
     fn next(&mut self) -> Option<T> {
         //TODO
-		None
+        if self.is_empty() {
+            return None;
+        }
+        let result = self.items.swap_remove(1);
+        println!("swap_remove {}", &result);
+        self.count -= 1;
+        if self.is_empty() {
+            println!("返回结果：{}", result);
+            return Some(result);
+        }
+        self.println("items.pop 前 ");
+        let t = self.items.pop().unwrap();
+        println!("items.pop {}", &t);
+        self.items.insert(1, t);
+        self.println("items.pop 后 ");
+        let mut current_idx = 1;
+        // 判断有没有子节点
+        while self.children_present(current_idx) {
+            let smallest_child_idx = self.smallest_child_idx(current_idx);
+            println!("current_idx {} smallest_child_idx {}",current_idx, smallest_child_idx);
+            if (self.comparator)(&self.items[smallest_child_idx], &self.items[current_idx]) {
+                self.items.swap(smallest_child_idx, current_idx);
+                current_idx = smallest_child_idx;
+            } else {
+                break;
+            }
+        }
+        self.println("返回结果前： ");
+        Some(result)
+    }
+}
+
+impl<T> Heap<T>
+where
+    T: Default + std::fmt::Display,
+{
+    fn println(&mut self, info: &str) {
+        print!("{}", info);
+        for x in &self.items {
+            print!("items {} ", x);
+        }
+        println!();
     }
 }
 
